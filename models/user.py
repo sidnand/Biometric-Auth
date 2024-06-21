@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from sqlmodel import SQLModel, Field, create_engine, Session, select
 
-from __future__ import annotations
 from typing import Optional, List
 
 class User(SQLModel, table=True):
