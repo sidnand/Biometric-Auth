@@ -15,11 +15,11 @@ class User(SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    firstname: str
-    lastname: str
+    firstname: Optional[str]
+    lastname: Optional[str]
 
     @classmethod
-    def add_user(cls, session: Session, firstname: str, lastname: str) -> User:
+    def add_user(cls, session: Session, id: int) -> "User":
         """
         Adds a new user to the database.
 
@@ -32,10 +32,7 @@ class User(SQLModel, table=True):
             User: The newly created user.
         """
 
-        if not firstname or not lastname or not isinstance(firstname, str) or not isinstance(lastname, str):
-            raise ValueError("Firstname and lastname must be strings")
-
-        user = User(firstname=firstname, lastname=lastname)
+        user = User(id=id)
 
         session.add(user)
         session.commit()
@@ -90,7 +87,7 @@ class User(SQLModel, table=True):
         return False
 
     @classmethod
-    def get_all_users(cls, session: Session) -> List["User"]:
+    def get_all_users(cls, session: Session) -> List[User]:
         """
         Retrieves all users from the database.
 
@@ -105,6 +102,28 @@ class User(SQLModel, table=True):
         result = session.exec(statement)
 
         return result.all()
+    
+    @classmethod
+    def get_next_id(cls, session: Session) -> int:
+        """
+        Gets the next available user ID.
+
+        Args:
+            session (Session): The database session.
+
+        Returns:
+            int: The next available user ID.
+        """
+
+        statement = select(User).order_by(User.id.desc())
+        result = session.exec(statement)
+
+        last_user = result.first()
+
+        if last_user:
+            return last_user.id + 1
+
+        return 1
 
     def __str__(self) -> str:
         return f"ID: {self.id}, Name: {self.firstname} {self.lastname}"
