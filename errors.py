@@ -7,6 +7,7 @@ class Error(Enum):
     Attributes:
         USER_NOT_FOUND (tuple): The error code and message for user not found.
         INTERNAL_SERVER_ERROR (tuple): The error code and message for internal server error.
+        UNAUTHORIZED (tuple): The error code and message for unauthorized access.
     """
 
     USER_NOT_FOUND = ("user_not_found", "User not found.", 404)
