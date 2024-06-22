@@ -56,6 +56,6 @@ def is_same_face(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> bool:
         )
     except Exception as e:
         print(f"Error verifying embeddings: {str(e)}")
-        return True
+        return False
 
     return verify['verified']
