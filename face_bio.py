@@ -27,8 +27,7 @@ def get_embeddings(path : str) -> List:
 
         emb = emb_objs[0]["embedding"]
     except Exception as e:
-        print(f"Error getting embeddings: {str(e)}")
-        return None
+        return []
 
     return emb
 
