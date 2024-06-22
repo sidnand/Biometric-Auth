@@ -90,16 +90,14 @@ async def authorize(
     image_path = copy_temp_file(image, image_filename)
     audio_path = copy_temp_file(audio, audio_filename)
 
-    # image_path = UPLOAD_DIRECTORY / image_filename
-    # with image_path.open("wb") as buffer:
-    #     shutil.copyfileobj(image.file, buffer)
-
-    # audio_path = UPLOAD_DIRECTORY / audio_filename
-    # with audio_path.open("wb") as buffer:
-    #     shutil.copyfileobj(audio.file, buffer)
-
     pred_embs_voice = voice_bio.get_embeddings(str(audio_path))
     pred_embs_face = face_bio.get_embeddings(str(image_path))
+
+    if not pred_embs_voice or not pred_embs_face:
+        image_path.unlink()
+        audio_path.unlink()
+
+        return ResponseManager.get_error_response(Error.UNAUTHORIZED)
 
     pred_voice_ids, _ = index_voice.get_ids(pred_embs_voice)
     pred_face_ids, _ = index_face.get_ids(pred_embs_face)
