@@ -45,6 +45,25 @@ def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
 
+def copy_temp_file(file: UploadFile, filename: str) -> Path:
+    """
+    Copies a temporary file to a new location.
+
+    Parameters:
+        file (UploadFile): The temporary file to copy.
+        filename (str): The name of the new file.
+
+    Returns:
+        Path: The path to the new file.
+    """
+
+    path = UPLOAD_DIRECTORY / filename
+
+    with open(path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return path
+
 @app.post("/authorize")
 async def authorize(
     image: UploadFile = File(...),
@@ -68,28 +87,32 @@ async def authorize(
     image_filename = f"{uuid.uuid4()}.{image_extension}"
     audio_filename = f"{uuid.uuid4()}.{audio_extension}"
 
-    image_path = UPLOAD_DIRECTORY / image_filename
-    with image_path.open("wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+    image_path = copy_temp_file(image, image_filename)
+    audio_path = copy_temp_file(audio, audio_filename)
 
-    audio_path = UPLOAD_DIRECTORY / audio_filename
-    with audio_path.open("wb") as buffer:
-        shutil.copyfileobj(audio.file, buffer)
+    # image_path = UPLOAD_DIRECTORY / image_filename
+    # with image_path.open("wb") as buffer:
+    #     shutil.copyfileobj(image.file, buffer)
+
+    # audio_path = UPLOAD_DIRECTORY / audio_filename
+    # with audio_path.open("wb") as buffer:
+    #     shutil.copyfileobj(audio.file, buffer)
 
     pred_embs_voice = voice_bio.get_embeddings(str(audio_path))
     pred_embs_face = face_bio.get_embeddings(str(image_path))
 
-    # get userID with the same voice and face embeddings
     pred_voice_ids, _ = index_voice.get_ids(pred_embs_voice)
     pred_face_ids, _ = index_face.get_ids(pred_embs_face)
 
-    if pred_voice_ids and pred_face_ids and pred_voice_ids[0] == pred_face_ids[0]:
+    # The user exists and the IDs match
+    if (pred_voice_ids and pred_face_ids) and (pred_voice_ids[0] == pred_face_ids[0]):
         pred_user_voice_embs = index_voice.get_vectors(pred_voice_ids[0])
         pred_user_face_embs = index_face.get_vectors(pred_face_ids[0])
 
         is_same_voice = voice_bio.is_same_speaker(pred_embs_voice, pred_user_voice_embs)
         is_same_face = face_bio.is_same_face(pred_embs_face, pred_user_face_embs)
 
+        # Check if the voice and face embeddings match
         if is_same_voice and is_same_face:
             user = User.get_user(session, pred_voice_ids[0])
 
@@ -101,13 +124,13 @@ async def authorize(
             audio_path.unlink()
 
             return ResponseManager.success_response(data)
-        else:
+        else: # The voice and face embeddings do not match, unauthorized access
             image_path.unlink()
             audio_path.unlink()
 
             return ResponseManager.get_error_response(Error.UNAUTHORIZED)
 
-    else:
+    else: # The user does not exist, create a new user
         all_users = User.get_all_users(session)
         all_user_ids = [user.id for user in all_users]
         next_id = User.get_next_id(session)
