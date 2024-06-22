@@ -2,6 +2,7 @@ import os
 import ipdb
 
 import torchvision
+import torch
 
 from speechbrain.inference.speaker import SpeakerRecognition
 
@@ -33,6 +34,19 @@ def get_embeddings(path : str) -> List:
 
     return emb
 
+def list_to_tensor(emb : List) -> torch.Tensor:
+    """
+    Convert a list to a PyTorch tensor.
+
+    Args:
+        emb (List): The list to convert.
+
+    Returns:
+        torch.Tensor: The PyTorch tensor.
+    """
+
+    return torch.tensor(emb)
+
 def is_same_speaker(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> Tuple[bool, float]:
     """
     Compare two face embeddings to determine if they belong to the same person.
@@ -45,8 +59,11 @@ def is_same_speaker(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> Tup
     Returns:
         bool: True if the embeddings belong to the same person, False otherwise.
     """
+
+    emb_1_tensor = list_to_tensor(emb_1)
+    emb_2_tensor = list_to_tensor(emb_2)
     
-    score = verification.similarity(emb_1, emb_2)
+    score = verification.similarity(emb_1_tensor, emb_2_tensor)
     pred = score > threshold
 
-    return pred, score
+    return pred.item()
