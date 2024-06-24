@@ -35,7 +35,7 @@ async def get_embeddings(path : str) -> List:
 
     return emb
 
-async def is_same_face(emb_1 : List, emb_2 : List) -> bool:
+async def is_same_face(emb_1 : List, emb_2 : List, threshold : float = 0.30) -> bool:
     """
     Compare two face embeddings to determine if they belong to the same person.
 
@@ -62,7 +62,7 @@ async def is_same_face(emb_1 : List, emb_2 : List) -> bool:
 
         verify = await asyncio.get_event_loop().run_in_executor(
             executor,
-            partial(DeepFace.verify, emb_1, emb_2, model_name="Facenet512", detector_backend="retinaface", anti_spoofing=True)
+            partial(DeepFace.verify, emb_1, emb_2, model_name="Facenet512", detector_backend="retinaface", threshold=threshold, anti_spoofing=True)
         )
 
     except Exception as e:
