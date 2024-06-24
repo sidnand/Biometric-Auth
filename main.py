@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import ipdb
-from typing import Generator
+from typing import Generator, List
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
 from fastapi.responses import JSONResponse
@@ -10,6 +10,7 @@ from sqlmodel import create_engine, Session
 
 import shutil
 import uuid
+import asyncio
 from pathlib import Path
 from datetime import timedelta
 
@@ -90,8 +91,8 @@ async def authorize(
     image_path = copy_temp_file(image, image_filename)
     audio_path = copy_temp_file(audio, audio_filename)
 
-    pred_embs_voice = voice_bio.get_embeddings(str(audio_path))
-    pred_embs_face = face_bio.get_embeddings(str(image_path))
+    pred_embs_voice = await voice_bio.get_embeddings(str(audio_path))
+    pred_embs_face = await face_bio.get_embeddings(str(image_path))
 
     if not pred_embs_voice or not pred_embs_face:
         image_path.unlink()
@@ -103,15 +104,17 @@ async def authorize(
     pred_face_ids, _ = index_face.get_ids(pred_embs_face)
 
     # The user exists and the IDs match
-    if (pred_voice_ids and pred_face_ids) and (pred_voice_ids[0] == pred_face_ids[0]):
+    if pred_voice_ids and pred_face_ids:
         pred_user_voice_embs = index_voice.get_vectors(pred_voice_ids[0])
         pred_user_face_embs = index_face.get_vectors(pred_face_ids[0])
 
-        is_same_voice = voice_bio.is_same_speaker(pred_embs_voice, pred_user_voice_embs)
-        is_same_face = face_bio.is_same_face(pred_embs_face, pred_user_face_embs)
+        is_same_voice = await voice_bio.is_same_speaker(pred_embs_voice, pred_user_voice_embs)
+        is_same_face = await face_bio.is_same_face(pred_embs_face, pred_user_face_embs)
+
+        print(is_same_voice, is_same_face)
 
         # Check if the voice and face embeddings match
-        if is_same_voice and is_same_face:
+        if (is_same_voice and is_same_face) and (pred_voice_ids[0] == pred_face_ids[0]):
             user = User.get_user(session, pred_voice_ids[0])
 
             data = {
@@ -122,36 +125,63 @@ async def authorize(
             audio_path.unlink()
 
             return ResponseManager.success_response(data)
-        else: # The voice and face embeddings do not match, unauthorized access
+        
+        # The voice and face embeddings do not match, unauthorized access
+        elif is_same_voice or is_same_face:
             image_path.unlink()
             audio_path.unlink()
 
             return ResponseManager.get_error_response(Error.UNAUTHORIZED)
 
-    else: # The user does not exist, create a new user
-        all_users = User.get_all_users(session)
-        all_user_ids = [user.id for user in all_users]
-        next_id = User.get_next_id(session)
-        is_voice_added = index_voice.add(next_id, pred_embs_voice, all_user_ids)
-        is_face_added = index_face.add(next_id, pred_embs_face, all_user_ids)
-
-        if is_voice_added and is_face_added:
-            new_user = User.add_user(session, next_id)
-
-            image_path.unlink()
-            audio_path.unlink()
-
-            data = {
-                "user": new_user
-            }
-
-            return ResponseManager.success_response(data)
-
         else:
-            image_path.unlink()
-            audio_path.unlink()
+            # The user does not exist, create a new user
+            return create_user(session, pred_embs_voice, pred_embs_face, image_path, audio_path)
 
-            return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
+    else: # The user does not exist, create a new user
+        return create_user(session, pred_embs_voice, pred_embs_face, image_path, audio_path)
+        
+
+def create_user(session: Session,
+                pred_embs_voice: List,
+                pred_embs_face: List,
+                image_path: Path,
+                audio_path: Path) -> JSONResponse:
+    """
+    Creates a new user.
+
+    Parameters:
+        pred_embs_voice (List): The voice embeddings of the user.
+        pred_embs_face (List): The face embeddings of the user.
+        image_path (Path): The path to the user's face image.
+        audio_path (Path): The path to the user's voice audio.
+    
+    Returns:
+        JSONResponse: A JSON response indicating that the user has been created.
+    """
+
+    all_users = User.get_all_users(session)
+    all_user_ids = [user.id for user in all_users]
+    next_id = User.get_next_id(session)
+    is_voice_added = index_voice.add(next_id, pred_embs_voice, all_user_ids)
+    is_face_added = index_face.add(next_id, pred_embs_face, all_user_ids)
+
+    if is_voice_added and is_face_added:
+        new_user = User.add_user(session, next_id)
+
+        image_path.unlink()
+        audio_path.unlink()
+
+        data = {
+            "user": new_user
+        }
+
+        return ResponseManager.success_response(data)
+
+    else:
+        image_path.unlink()
+        audio_path.unlink()
+
+        return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
 
 if __name__ == "__main__":
     import uvicorn

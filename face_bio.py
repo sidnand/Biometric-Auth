@@ -1,4 +1,7 @@
 import ipdb
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 from deepface import DeepFace
 
@@ -6,7 +9,9 @@ from typing import List
 
 FACE_EMBEDDING_DIM = 512
 
-def get_embeddings(path : str) -> List:
+executor = ThreadPoolExecutor(max_workers=4)
+
+async def get_embeddings(path : str) -> List:
     """
     Get the embeddings of the audio file.
 
@@ -18,20 +23,19 @@ def get_embeddings(path : str) -> List:
     """
 
     try:
-        emb_objs = DeepFace.represent(
-            img_path = path,
-            model_name = "Facenet512",
-            detector_backend = "retinaface",
-            anti_spoofing=True
+        emb_objs = await asyncio.get_event_loop().run_in_executor(
+            executor,
+            partial(DeepFace.represent, path, model_name="Facenet512", detector_backend="retinaface", anti_spoofing=True)
         )
 
         emb = emb_objs[0]["embedding"]
     except Exception as e:
+        print(e)
         return []
 
     return emb
 
-def is_same_face(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> bool:
+async def is_same_face(emb_1 : List, emb_2 : List) -> bool:
     """
     Compare two face embeddings to determine if they belong to the same person.
 
@@ -45,16 +49,24 @@ def is_same_face(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> bool:
     """
 
     try:
-        verify = DeepFace.verify(
-            img1_path = emb_1,
-            img2_path = emb_2,
-            model_name = "Facenet512",
-            detector_backend = "retinaface",
-            threshold = threshold,
-            anti_spoofing = True,
+        # verify = await asyncio.get_event_loop().run_in_executor(
+        #     executor,
+        #     DeepFace.verify,
+        #     emb_1,
+        #     emb_2,
+        #     "Facenet512",
+        #     "retinaface",
+        #     threshold,
+        #     True
+        # )
+
+        verify = await asyncio.get_event_loop().run_in_executor(
+            executor,
+            partial(DeepFace.verify, emb_1, emb_2, model_name="Facenet512", detector_backend="retinaface", anti_spoofing=True)
         )
+
     except Exception as e:
-        print(f"Error verifying embeddings: {str(e)}")
+        print(e)
         return False
 
     return verify['verified']

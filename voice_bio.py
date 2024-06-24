@@ -1,5 +1,8 @@
 import os
 import ipdb
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 import torchvision
 import torch
@@ -15,7 +18,9 @@ in_dir = "uploads"
 verification = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb",
                                                savedir="pretrained_voice_models/spkrec-ecapa-voxceleb")
 
-def get_embeddings(path : str) -> List:
+executor = ThreadPoolExecutor(max_workers=4)
+
+async def get_embeddings(path : str) -> List:
     """
     Get the embeddings of the audio file.
 
@@ -26,11 +31,22 @@ def get_embeddings(path : str) -> List:
         list: The embeddings of the
     """
 
-    waveform = verification.load_audio(path, savedir=in_dir)
-    batch = waveform.unsqueeze(0)
-    emb = verification.encode_batch(batch, None, normalize=False)
+    try:
+        waveform = await asyncio.get_event_loop().run_in_executor(
+            executor,
+            partial(verification.load_audio, path, savedir=in_dir)
+        )
+        batch = waveform.unsqueeze(0)
 
-    emb = emb[0][0].tolist()
+        emb = await asyncio.get_event_loop().run_in_executor(
+            executor,
+            partial(verification.encode_batch, batch, None, normalize=False)
+        )
+
+        emb = emb[0][0].tolist()
+    except Exception as e:
+        print(e)
+        return []
 
     return emb
 
@@ -47,7 +63,7 @@ def list_to_tensor(emb : List) -> torch.Tensor:
 
     return torch.tensor(emb)
 
-def is_same_speaker(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> Tuple[bool, float]:
+async def is_same_speaker(emb_1 : List, emb_2 : List, threshold : float = 0.30) -> Tuple[bool, float]:
     """
     Compare two face embeddings to determine if they belong to the same person.
 
@@ -60,10 +76,19 @@ def is_same_speaker(emb_1 : List, emb_2 : List, threshold : float = 0.25) -> Tup
         bool: True if the embeddings belong to the same person, False otherwise.
     """
 
-    emb_1_tensor = list_to_tensor(emb_1)
-    emb_2_tensor = list_to_tensor(emb_2)
-    
-    score = verification.similarity(emb_1_tensor, emb_2_tensor)
-    pred = score > threshold
+    try:
+        # Convert lists to tensors
+        emb_1_tensor = list_to_tensor(emb_1)
+        emb_2_tensor = list_to_tensor(emb_2)
+        
+        # Run the blocking similarity operation in a separate thread
+        score = await asyncio.get_event_loop().run_in_executor(
+            executor,
+            partial(verification.similarity, emb_1_tensor, emb_2_tensor)
+        )
+        pred = score > threshold
+    except Exception as e:
+        print(e)
+        return False, 0.0
 
     return pred.item()
