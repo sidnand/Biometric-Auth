@@ -4,16 +4,10 @@
 
 ## POST /authorize
 
-### Description
-
 Logs in an existing user by verifying the provided face image and voice audio. If the user does not exist, a new user is created.
-
-### Parameters
 
 - `image` (File): The user's face image file.
 - `audio` (File): The user's voice audio file.
-
-### Request
 
 - **Content-Type:** `multipart/form-data`
 - **Body:**
@@ -23,7 +17,6 @@ Logs in an existing user by verifying the provided face image and voice audio. I
 ### Response
 
 - **Status Code:** 200
-- **Description:** The user has been successfully authorized.
 - **Body:**
   
     ```json
@@ -40,7 +33,6 @@ Logs in an existing user by verifying the provided face image and voice audio. I
     ```
 
 - **Status Code:** 401
-- **Description:** The provided face image and voice audio do not match, indicating unauthorized access.
 - **Body:**
   
     ```json
@@ -54,7 +46,6 @@ Logs in an existing user by verifying the provided face image and voice audio. I
     ```
 
 - **Status Code:** 500
-- **Description:** An internal server error occurred during processing.
 - **Body:**
   
     ```json
@@ -67,15 +58,67 @@ Logs in an existing user by verifying the provided face image and voice audio. I
     }
     ```
 
-### Example
+## GET /user/{userID}
 
-```bash
-POST /authorize
-Content-Type: multipart/form-data
-Body:
-  image: <face_image.jpg>
-  audio: <voice_audio.wav>
-```
+Retrieves the user's information.
+
+- `userID` (int): The user's ID.
+
+- **Content-Type:** `application/json`
+- **Body:**
+  - `userID`: The user's ID.
+
+### Response
+
+- **Status Code:** 200
+- **Body:**
+  
+    ```json
+    {
+        "success": True,
+        "data": {
+            "user": {
+            "id": <int>,
+            "firstname": <null | str>,
+            "lastname": <null | str>
+            }
+        }
+    }
+    ```
+
+- **Status Code:** 404
+
+## PATCH /user/{userID}
+
+Updates the user's information.
+
+- `firstname` (str): The user's first name.
+- `lastname` (str): The user's last name.
+
+- **Content-Type:** `application/json`
+- **Body:**
+  - `firstname`: The user's first name.
+  - `lastname`: The user's last name.
+
+### Response
+
+- **Status Code:** 200
+- **Body:**
+  
+    ```json
+    {
+        "success": True,
+        "data": {
+            "user": {
+            "id": <int>,
+            "firstname": <str>,
+            "lastname": <str>
+            }
+        }
+    }
+    ```
+
+- **Status Code:** 404
 
 ## Development
 
