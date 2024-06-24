@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from fastapi import File
 from sqlmodel import SQLModel, Field, create_engine, Session, select
 
 from typing import Optional, List
@@ -85,6 +86,35 @@ class User(SQLModel, table=True):
             return True
 
         return False
+    
+    @classmethod
+    def update_user(cls, session: Session, user_id: int, update_data: UserUpdate) -> Optional[User]:
+        """
+        Updates a user in the database.
+
+        Args:
+            session (Session): The database session.
+            user_id (int): The ID of the user to update.
+            update_data (UserUpdate): The data to update.
+
+        Returns:
+            User: The updated user, or None if the user does not exist.
+        """
+
+        user = cls.get_user(session, user_id)
+
+        if user:
+            for key, value in update_data.model_dump().items():
+                if value:
+                    setattr(user, key, value)
+
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+            return user
+
+        return None
 
     @classmethod
     def get_all_users(cls, session: Session) -> List[User]:
@@ -127,3 +157,7 @@ class User(SQLModel, table=True):
 
     def __str__(self) -> str:
         return f"ID: {self.id}, Name: {self.firstname} {self.lastname}"
+
+class UserUpdate(SQLModel):
+    firstname: Optional[str]
+    lastname: Optional[str]

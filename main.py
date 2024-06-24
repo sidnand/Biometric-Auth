@@ -17,7 +17,7 @@ from datetime import timedelta
 import face_bio
 import voice_bio
 
-from models.user import User
+from models.user import User, UserUpdate
 from errors import Error
 from annoy_index_manager import AnnoyIndexManager
 from response_manager import ResponseManager
@@ -139,7 +139,57 @@ async def authorize(
 
     else: # The user does not exist, create a new user
         return create_user(session, pred_embs_voice, pred_embs_face, image_path, audio_path)
-        
+
+@app.get("/user/{userID}")
+def get_user(userID: int, session: Session = Depends(get_session)) -> JSONResponse:
+    """
+    Gets all users.
+
+    Args:
+        userID (int): The ID of the user.
+        session (Session): The database session.
+
+    Returns:
+        JSONResponse: A JSON response containing all users.
+    """
+
+    user = User.get_user(session, userID)
+
+    if user:
+        data = {
+            "user": user
+        }
+
+        return ResponseManager.success_response(data)
+
+    return ResponseManager.get_error_response(Error.NOT_FOUND)
+
+@app.patch("/user/{userID}")
+def update_user(userID: int,
+                update_data: UserUpdate,
+                session: Session = Depends(get_session)) -> JSONResponse:
+    """
+    Updates a user.
+
+    Args:
+        userID (int): The ID of the user.
+        update_data (Dict): The data to update.
+        session (Session): The database session.
+
+    Returns:
+        JSONResponse: A JSON response indicating that the user has been updated.
+    """
+
+    user = User.update_user(session, userID, update_data)
+
+    if user:
+        data = {
+            "user": user
+        }
+
+        return ResponseManager.success_response(data)
+    
+    return ResponseManager.get_error_response(Error.USER_NOT_FOUND)
 
 def create_user(session: Session,
                 pred_embs_voice: List,
