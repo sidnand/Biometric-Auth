@@ -1,0 +1,15 @@
+pretrained_voice_models/
+uploads/
+
+.DS_Store
+
+.python-version
+*.pyc
+__pycache__/
+
+*.db
+*.ann
+*.flac
+*.png
+*.jpg
+*.jpeg

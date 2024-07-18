@@ -120,6 +120,25 @@ Updates the user's information.
 
 - **Status Code:** 404
 
+## DELETE /user/{userID}
+
+Deletes the user's information.
+
+- `userID` (int): The user's ID.
+- **Content-Type:** `application/json`
+
+### Response
+
+- **Status Code:** 200
+- **Body:**
+  
+    ```json
+    {
+        "success": True,
+        "data": null
+    }
+    ```
+
 ## Development
 
 Python 3.12.3
