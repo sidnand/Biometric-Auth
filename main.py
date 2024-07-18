@@ -191,6 +191,26 @@ def update_user(userID: int,
     
     return ResponseManager.get_error_response(Error.USER_NOT_FOUND)
 
+@app.delete("/user/{userID}")
+def delete_user(userID: int, session: Session = Depends(get_session)) -> JSONResponse:
+    """
+    Deletes a user.
+
+    Args:
+        userID (int): The ID of the user.
+        session (Session): The database session.
+
+    Returns:
+        JSONResponse: A JSON response indicating that the user has been deleted.
+    """
+
+    is_deleted = User.delete_user(session, userID) and index_voice.delete(userID) and index_face.delete(userID)
+
+    if is_deleted:
+        return ResponseManager.success_response()
+
+    return ResponseManager.get_error_response(Error.USER_NOT_FOUND)
+
 def create_user(session: Session,
                 pred_embs_voice: List,
                 pred_embs_face: List,

@@ -50,6 +50,32 @@ class AnnoyIndexManager:
             print(f"Error adding vector to index: {e}")
             return False
 
+    def delete(self, id: int) -> bool:
+        """
+        Deletes a vector from the index.
+
+        Args:
+            id (int): The ID of the vector to be deleted.
+        """
+
+        try:
+            self.index.unload()
+            new_index = AnnoyIndex(self.vector_length, "angular")
+
+            all_ids = [i for i in range(self.index.get_n_items()) if i != id]
+
+            for i in all_ids:
+                emb = self.index.get_item_vector(i)
+                new_index.add_item(i, emb)
+
+            self.rebuild_index(new_index)
+            self.save_index()
+
+            return True
+        except Exception as e:
+            print(f"Error deleting vector from index: {e}")
+            return False
+
     def get_ids(self, vector: List[float], num_results: int = 1) -> Tuple[List[int], List[float]]:
         """
         Gets the IDs of the nearest vectors to the given vector.
