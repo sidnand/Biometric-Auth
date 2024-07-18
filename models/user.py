@@ -54,9 +54,6 @@ class User(SQLModel, table=True):
             User: The user with the given ID, or None if the user does not exist.
         """
 
-        if not isinstance(user_id, int):
-            raise ValueError("User ID must be an integer")
-
         statement = select(User).where(User.id == user_id)
         result = session.exec(statement)
 
@@ -74,9 +71,6 @@ class User(SQLModel, table=True):
         Returns:
             bool: True if the user was deleted, False otherwise.
         """
-
-        if not isinstance(user_id, int):
-            raise ValueError("User ID must be an integer")
 
         user = cls.get_user(session, user_id)
 
