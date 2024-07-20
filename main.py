@@ -162,7 +162,7 @@ def get_user(userID: int, session: Session = Depends(get_session)) -> JSONRespon
 
         return ResponseManager.success_response(data)
 
-    return ResponseManager.get_error_response(Error.NOT_FOUND)
+    return ResponseManager.get_error_response(Error.USER_NOT_FOUND)
 
 @app.patch("/user/{userID}")
 def update_user(userID: int,
