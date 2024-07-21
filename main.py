@@ -22,10 +22,13 @@ from utils.errors import Error
 from utils.annoy_index_manager import AnnoyIndexManager
 from utils.response_manager import ResponseManager
 
-DATABASE_URL = "sqlite:///db/users.db"
-
 UPLOAD_DIRECTORY = Path("uploads")
 UPLOAD_DIRECTORY.mkdir(exist_ok=True)
+
+DATABASE_DIRECTORY = Path("db")
+DATABASE_DIRECTORY.mkdir(exist_ok=True)
+
+DATABASE_URL = "sqlite:///db/users.db"
 
 index_face = AnnoyIndexManager("db/face_index.ann", face_bio.FACE_EMBEDDING_DIM)
 index_voice = AnnoyIndexManager("db/voice_index.ann", voice_bio.VOICE_EMBEDDING_DIM)
