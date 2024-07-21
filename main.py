@@ -253,6 +253,6 @@ def create_user(session: Session,
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
