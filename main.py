@@ -6,8 +6,6 @@ from typing import Generator, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
 from fastapi.responses import JSONResponse
 
-from mangum import Mangum
-
 from sqlmodel import create_engine, Session
 
 import shutil
@@ -140,6 +138,26 @@ async def authorize(
     else: # The user does not exist, create a new user
         return create_user(session, pred_embs_voice, pred_embs_face, image_path, audio_path)
 
+@app.get("/db/users")
+def get_all_users(session: Session = Depends(get_session)) -> JSONResponse:
+    """
+    Gets all users.
+
+    Args:
+        session (Session): The database session.
+
+    Returns:
+        JSONResponse: A JSON response containing all users.
+    """
+
+    users = User.get_all_users(session)
+
+    data = {
+        "users": users
+    }
+
+    return ResponseManager.success_response(data)
+
 @app.get("/user/{userID}")
 def get_user(userID: int, session: Session = Depends(get_session)) -> JSONResponse:
     """
@@ -253,8 +271,6 @@ def create_user(session: Session,
         audio_path.unlink()
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
-
-handler = Mangum(app)
 
 if __name__ == "__main__":
     import uvicorn
