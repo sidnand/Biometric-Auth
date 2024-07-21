@@ -1,6 +1,10 @@
+pretrained_voice_models/
 uploads/
+db/
+tests/
 
 .DS_Store
+credentials
 
 .python-version
 *.pyc

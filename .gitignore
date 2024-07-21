@@ -3,6 +3,7 @@ uploads/
 db/
 
 .DS_Store
+credentials
 
 .python-version
 *.pyc
