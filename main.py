@@ -6,6 +6,8 @@ from typing import Generator, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
 from fastapi.responses import JSONResponse
 
+from mangum import Mangum
+
 from sqlmodel import create_engine, Session
 
 import shutil
@@ -111,8 +113,6 @@ async def authorize(
         is_same_voice = await voice_bio.is_same_speaker(pred_embs_voice, pred_user_voice_embs)
         is_same_face = await face_bio.is_same_face(pred_embs_face, pred_user_face_embs)
 
-        print(is_same_voice, is_same_face)
-
         # Check if the voice and face embeddings match
         if (is_same_voice and is_same_face) and (pred_voice_ids[0] == pred_face_ids[0]):
             user = User.get_user(session, pred_voice_ids[0])
@@ -204,7 +204,8 @@ def delete_user(userID: int, session: Session = Depends(get_session)) -> JSONRes
         JSONResponse: A JSON response indicating that the user has been deleted.
     """
 
-    is_deleted = User.delete_user(session, userID) and index_voice.delete(userID) and index_face.delete(userID)
+    all_ids = [user.id for user in User.get_all_users(session)]
+    is_deleted = User.delete_user(session, userID) and index_voice.delete(userID, all_ids) and index_face.delete(userID, all_ids)
 
     if is_deleted:
         return ResponseManager.success_response()
@@ -253,6 +254,8 @@ def create_user(session: Session,
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+handler = Mangum(app)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

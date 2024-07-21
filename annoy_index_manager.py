@@ -50,7 +50,7 @@ class AnnoyIndexManager:
             print(f"Error adding vector to index: {e}")
             return False
 
-    def delete(self, id: int) -> bool:
+    def delete(self, id: int, all_ids: List[int]) -> bool:
         """
         Deletes a vector from the index.
 
@@ -59,14 +59,7 @@ class AnnoyIndexManager:
         """
 
         try:
-            self.index.unload()
-            new_index = AnnoyIndex(self.vector_length, "angular")
-
-            all_ids = [i for i in range(self.index.get_n_items()) if i != id]
-
-            for i in all_ids:
-                emb = self.index.get_item_vector(i)
-                new_index.add_item(i, emb)
+            new_index = self.__copy__(all_ids, exclude=[id])
 
             self.rebuild_index(new_index)
             self.save_index()
@@ -133,7 +126,7 @@ class AnnoyIndexManager:
         new_index.build(self.num_trees)
         self.index = new_index
     
-    def __copy__(self, all_ids: List[int]) -> AnnoyIndexManager:
+    def __copy__(self, all_ids: List[int], exclude=[]) -> AnnoyIndexManager:
         """
         Creates a copy of the AnnoyIndexManager.
 
@@ -144,6 +137,9 @@ class AnnoyIndexManager:
         new_index = AnnoyIndex(self.vector_length, "angular")
 
         for i in all_ids:
+            if i in exclude:
+                continue
+
             emb = self.index.get_item_vector(i)
             new_index.add_item(i, emb)
 
