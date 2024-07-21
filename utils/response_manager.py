@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from errors import Error
+from .errors import Error
 
 class ResponseManager:
     @staticmethod

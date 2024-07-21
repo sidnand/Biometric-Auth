@@ -14,21 +14,21 @@ import asyncio
 from pathlib import Path
 from datetime import timedelta
 
-import face_bio
-import voice_bio
+import src.face_bio as face_bio
+import src.voice_bio as voice_bio
 
 from models.user import User, UserUpdate
-from errors import Error
-from annoy_index_manager import AnnoyIndexManager
-from response_manager import ResponseManager
+from utils.errors import Error
+from utils.annoy_index_manager import AnnoyIndexManager
+from utils.response_manager import ResponseManager
 
-DATABASE_URL = "sqlite:///users.db"
+DATABASE_URL = "sqlite:///db/users.db"
 
 UPLOAD_DIRECTORY = Path("uploads")
 UPLOAD_DIRECTORY.mkdir(exist_ok=True)
 
-index_face = AnnoyIndexManager("face_index.ann", face_bio.FACE_EMBEDDING_DIM)
-index_voice = AnnoyIndexManager("voice_index.ann", voice_bio.VOICE_EMBEDDING_DIM)
+index_face = AnnoyIndexManager("db/face_index.ann", face_bio.FACE_EMBEDDING_DIM)
+index_voice = AnnoyIndexManager("db/voice_index.ann", voice_bio.VOICE_EMBEDDING_DIM)
 
 app = FastAPI()
 

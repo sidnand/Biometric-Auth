@@ -5,7 +5,7 @@ import unittest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
-from annoy_index_manager import AnnoyIndexManager
+from utils.annoy_index_manager import AnnoyIndexManager
 
 class TestAnnoyIndexManager(unittest.TestCase):
     def setUp(self):

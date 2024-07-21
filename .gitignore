@@ -1,5 +1,6 @@
 pretrained_voice_models/
 uploads/
+db/
 
 .DS_Store
 
