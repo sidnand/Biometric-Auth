@@ -13,7 +13,7 @@ jobs:
       run: zip -r repo.zip .
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -23,4 +23,4 @@ jobs:
       run: aws s3 rm s3://${{ secrets.AWS_S3_BUCKET }}/ --recursive
 
     - name: Upload zip to S3
-      run: aws s3 cp repo.zip s3://${{ secrets.AWS_S3_BUCKET }}/repo.zip --acl public-read
+      run: aws s3 cp repo.zip s3://${{ secrets.AWS_S3_BUCKET }}/repo.zip
