@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlmodel import create_engine, Session
 
 import uvicorn
+import mangum
 
 import shutil
 import uuid
@@ -277,5 +278,4 @@ def create_user(session: Session,
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+handler = mangum.Mangum(app)
