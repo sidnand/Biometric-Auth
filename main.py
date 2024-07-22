@@ -8,9 +8,6 @@ from fastapi.responses import JSONResponse
 
 from sqlmodel import create_engine, Session
 
-import uvicorn
-import mangum
-
 import shutil
 import uuid
 import asyncio
@@ -292,5 +289,3 @@ def create_user(session: Session,
         audio_path.unlink()
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
-
-handler = mangum.Mangum(app)
