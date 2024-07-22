@@ -71,6 +71,21 @@ def copy_temp_file(file: UploadFile, filename: str) -> Path:
 
     return path
 
+@app.get("/")
+def home() -> JSONResponse:
+    """
+    Returns the home page.
+
+    Returns:
+        JSONResponse: A JSON response containing the home page.
+    """
+
+    data = {
+        "message": "Welcome to the Voice and Face Biometric Authentication API!"
+    }
+
+    return ResponseManager.success_response(data)
+
 @app.post("/authorize")
 async def authorize(
     image: UploadFile = File(...),
