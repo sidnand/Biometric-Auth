@@ -6,6 +6,8 @@ from typing import Generator, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
 from fastapi.responses import JSONResponse
 
+from mangum import Mangum
+
 from sqlmodel import create_engine, Session
 
 import shutil
@@ -34,6 +36,8 @@ index_face = AnnoyIndexManager("db/face_index.ann", face_bio.FACE_EMBEDDING_DIM)
 index_voice = AnnoyIndexManager("db/voice_index.ann", voice_bio.VOICE_EMBEDDING_DIM)
 
 app = FastAPI()
+
+handler = Mangum(app)
 
 engine = create_engine(DATABASE_URL)
 User.metadata.create_all(engine)
@@ -274,7 +278,3 @@ def create_user(session: Session,
         audio_path.unlink()
 
         return ResponseManager.get_error_response(Error.INTERNAL_SERVER_ERROR)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
