@@ -2,12 +2,13 @@
 
 ## Endpoints
 
+## GET /
+
+Returns a welcome message.
+
 ## POST /authorize
 
 Logs in an existing user by verifying the provided face image and voice audio. If the user does not exist, a new user is created.
-
-- `image` (File): The user's face image file.
-- `audio` (File): The user's voice audio file.
 
 - **Content-Type:** `multipart/form-data`
 - **Body:**
@@ -62,8 +63,6 @@ Logs in an existing user by verifying the provided face image and voice audio. I
 
 Retrieves the user's information.
 
-- `userID` (int): The user's ID.
-
 - **Content-Type:** `application/json`
 - **Body:**
   - `userID`: The user's ID.
@@ -91,9 +90,6 @@ Retrieves the user's information.
 ## PATCH /user/{userID}
 
 Updates the user's information.
-
-- `firstname` (str): The user's first name.
-- `lastname` (str): The user's last name.
 
 - **Content-Type:** `application/json`
 - **Body:**
@@ -139,6 +135,30 @@ Deletes the user's information.
     }
     ```
 
+## GET /db/users
+
+Retrieves all users' information.
+
+- **Content-Type:** `application/json`
+
+### Response
+
+- **Status Code:** 200
+- **Body:**
+  
+    ```json
+    {
+        "success": True,
+        "data": {
+            "users": [
+                { ... }
+            ]
+        }
+    }
+    ```
+
 ## Development
 
 Python 3.12.3
+
+Run with `uvicorn main:app --host 0.0.0.0 --port 8000`
