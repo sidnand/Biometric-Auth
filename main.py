@@ -3,16 +3,14 @@ from __future__ import annotations
 import ipdb
 from typing import Generator, List
 
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
+from fastapi import FastAPI, File, UploadFile, Depends
 from fastapi.responses import JSONResponse
 
 from sqlmodel import create_engine, Session
 
 import shutil
 import uuid
-import asyncio
 from pathlib import Path
-from datetime import timedelta
 
 import src.face_bio as face_bio
 import src.voice_bio as voice_bio

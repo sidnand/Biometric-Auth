@@ -49,16 +49,6 @@ async def is_same_face(emb_1 : List, emb_2 : List, threshold : float = 0.30) -> 
     """
 
     try:
-        # verify = await asyncio.get_event_loop().run_in_executor(
-        #     executor,
-        #     DeepFace.verify,
-        #     emb_1,
-        #     emb_2,
-        #     "Facenet512",
-        #     "retinaface",
-        #     threshold,
-        #     True
-        # )
 
         verify = await asyncio.get_event_loop().run_in_executor(
             executor,
