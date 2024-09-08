@@ -1,4 +1,6 @@
-# FinTech MVP Backend API
+# Biometric Authentication
+
+This is an API for doing face and voice authentication using deepface and speechbrain.
 
 ## Endpoints
 
